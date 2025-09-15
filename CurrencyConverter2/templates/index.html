@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Currency Converter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+      margin: 0;
+      overflow-x: hidden;
+    }
+
+    /* Background Video */
+    #bgVideo {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      min-width: 100%;
+      min-height: 100%;
+      z-index: -1;
+      object-fit: cover;
+    }
+
+    .container {
+  background: linear-gradient(135deg, rgba(255, 211, 100, 0.70), rgba(255, 152, 79, 0.70)); 
+  padding: 20px;
+  border-radius: 15px;
+  width: 400px;
+  margin: auto;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+    h2 {
+      color: #333;
+    }
+    select, input, button {
+      margin: 10px;
+      padding: 10px;
+      width: 80%;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    #result {
+      margin-top: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #2C3E50;
+    }
+    #history {
+      margin-top: 20px;
+      text-align: left;
+      font-size: 14px;
+      color: #444;
+    }
+    #history ul {
+      list-style-type: square;
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Video -->
+  <video autoplay muted loop id="bgVideo">
+    <source src="{{ url_for('static', filename='bg.mp4') }}" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+
+  <!-- Converter Box -->
+  <div class="container">
+    <h2>🌍 Smart Currency Converter</h2>
+    <input type="number" id="amount" placeholder="Enter amount" />
+    <br>
+    <select id="from"></select>
+    <select id="to"></select>
+    <br>
+    <button onclick="convert()">Convert</button>
+    <div id="result"></div>
+    <div id="history">
+      <h3>🕒 Conversion History</h3>
+      <ul id="historyList"></ul>
+    </div>
+  </div>
+
+  <script>
+    const currencies = [
+      "USD","EUR","GBP","INR","JPY","AUD","CAD","CHF","CNY","NZD",
+      "SEK","NOK","SGD","HKD","KRW","ZAR","BRL","MXN","RUB","AED","TRY"
+    ];
+
+    // Populate dropdowns
+    const fromSelect = document.getElementById("from");
+    const toSelect = document.getElementById("to");
+    currencies.forEach(c => {
+      fromSelect.innerHTML += `<option value="${c}">${c}</option>`;
+      toSelect.innerHTML += `<option value="${c}">${c}</option>`;
+    });
+    fromSelect.value = "USD";
+    toSelect.value = "INR";
+
+    const historyList = document.getElementById("historyList");
+
+    function convert() {
+      const amount = document.getElementById("amount").value;
+      const from = fromSelect.value;
+      const to = toSelect.value;
+
+      fetch(`http://127.0.0.1:5000/convert?amount=${amount}&from=${from}&to=${to}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            document.getElementById("result").innerText = "⚠️ Error: " + data.error;
+          } else {
+            const resultText = `${data.amount} ${data.from} = ${data.converted} ${data.to}`;
+            document.getElementById("result").innerText = resultText;
+
+            // Add to history (max 5 items)
+            const li = document.createElement("li");
+            li.innerText = resultText;
+            historyList.prepend(li);
+            if (historyList.childElementCount > 5) {
+              historyList.removeChild(historyList.lastChild);
+            }
+          }
+        });
+    }
+  </script>
+</body>
+</html>
